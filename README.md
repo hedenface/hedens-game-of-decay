@@ -44,12 +44,12 @@ Most of this was copied or paraphrased from the Wikipedia entry on "Conway's_Gam
 * In the original there are 3 transformations: birth, remain alive, and death
 * In the new - there are now ***4*** transformations: birth, remain alive, decay, and death (although death is by default a slow descent through decay)
     * If we give a range of 0-1 for the original Conway's Game of Life - then it should be sufficient to assume:
-        * < 200% neighbor value (2 live cells) will kill a live cell
-        * >= 200% neighbor value (2 live cells) and <= 300% (3 live cells) will keep a cell alive
-        * == 300% (3 live cells) will bring a dead cell to life
-        * > 300% (3 live cells) will kill a live cell
+        * `< 200%` neighbor value (2 live cells) will kill a live cell
+        * `>= 200%` neighbor value (2 live cells) and `<= 300%` (3 live cells) will keep a cell alive
+        * `== 300%` (3 live cells) will bring a dead cell to life
+        * `> 300%` (3 live cells) will kill a live cell
     * We can adjust these slightly to account for decay:
-        * < 200% or > 300% of a neighbor value will decay a living cell, eventually to death (by decrementing its value by 1)
+        * `< 200%` or `> 300%` of a neighbor value will decay a living cell, eventually to death (by decrementing its value by 1)
 * A neighbor value is defined as the total value of all of the eight neighbors of any given cell
 * We compare the current value of the cell against the percentages for most computations
 * When bringing a cell alive, all possible multiples of values in the range are tested before deciding on the new life value
