@@ -167,10 +167,20 @@ int main (int argc, char **argv)
         switch (c) {
 
         case 'h':
+
+            if (map_string != NULL) {
+                free(map_string);
+            }
+
             return print_help();
             break;
 
         case 'v':
+
+            if (map_string != NULL) {
+                free(map_string);
+            }
+
             return print_version();
             break;
 
@@ -178,6 +188,9 @@ int main (int argc, char **argv)
             rows = atoi(optarg);
 
             if (rows <= 0) {
+                if (map_string != NULL) {
+                    free(map_string);
+                }
                 return print_help();
             }
 
@@ -187,6 +200,9 @@ int main (int argc, char **argv)
             cols = atoi(optarg);
 
             if (cols <= 0) {
+                if (map_string != NULL) {
+                    free(map_string);
+                }
                 return print_help();
             }
 
@@ -196,6 +212,9 @@ int main (int argc, char **argv)
             result = parse_range(optarg, &range_min, &range_max);
 
             if (result == FALSE) {
+                if (map_string != NULL) {
+                    free(map_string);
+                }
                 return print_help();
             }
 
@@ -209,6 +228,9 @@ int main (int argc, char **argv)
             max_generations = atoi(optarg);
 
             if (max_generations < 1) {
+                if (map_string != NULL) {
+                    free(map_string);
+                }
                 return print_help();
             }
 
