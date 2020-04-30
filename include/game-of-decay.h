@@ -56,4 +56,13 @@ typedef struct game_options {
 } game_options;
 
 
+
+
+int parse_range(char * range, int * min, int * max);
+int parse_arguments(int argc, char **argv, game_options * opts);
+int set_default_map(game_options * opts);
+int parse_map_string(game_options * opts);
+int sanity_check(game_options * opts);
+
+
 #endif /* _GAME_OF_DECAY_H_ */
