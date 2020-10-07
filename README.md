@@ -8,17 +8,33 @@ I started this particular implementation project with the standard name of "Conw
 
 ## Compiling
 
-Currently in this very early implementation, no `Makefile` exists. But compiling should be rather easy with a standard tool chain:
+It's a pretty basic Makefile.
 
+From the root of the project:
+
+```bash
+make
 ```
-cd src
-gcc game-of-decay.c -o game-of-decay
-./game-of-decay
-```
+
+You should now have a binary `game-of-decay`.
 
 ## Executing
 
-I think the most important flag at this time to mention is `-R`. When nothing is specified, the range is `0-1` (e.g.: original Conways Game of Life). Specify your range and let 'er rip.
+        { "help",        no_argument,       0, 'h' },
+        { "version",     no_argument,       0, 'v' },
+        { "rows",        required_argument, 0, 'r' },
+        { "cols",        required_argument, 0, 'c' },
+        { "max-value",   required_argument, 0, 'm' },
+        { "generations", required_argument, 0, 'g' },
+
+The binary takes a few options:
+
+* `-h`, `--help`: Print help page and quit
+* `-v`, `--version`: Print version information and quit
+* `-r`, `--rows`: Specify the number of rows for the board (*minimum: `1`*)
+* `-c`, `--cols`: Specify the number of cols for the board (*minimum: `1`*)
+* `-m`, `--max-value`: The maximum value of any cell (currently any value greater than 9 is going to cause formatting issues) (*default: `1`* [this mimics Conways Game of Life]) (*minimum: `1`*)
+* `-g`, `--generations`: Maximum amount of generations to cycle (*minimum: `1`*)
 
 ## Original Rules (Conways Game of Life)
 

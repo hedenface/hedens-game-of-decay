@@ -8,9 +8,11 @@
 #include "game-of-decay.h"
 
 
-// if full random is false, then we pick about PERCENTAGE_DEAD % to kill from the beginning, otherwise it gets weird :)
-#define FULL_RANDOM FALSE
+/* if full random is false, then we pick about PERCENTAGE_DEAD % to
+   kill from the beginning, otherwise it gets weird :) */
+#define FULL_RANDOM     FALSE
 #define PERCENTAGE_DEAD 50
+
 
 /*
     * < 200% neighbor neighbors (2 live cells, STAY_ALIVE_MIN) will kill a live cell
@@ -22,17 +24,17 @@
 #define COME_ALIVE     3 /* 300% */
 
 
+#define TRUE  1
+#define FALSE 0
 
 
-
-
-int print_version()
+void print_version()
 {
     printf("%s\n", "Hedens Game of Decay - version 0.0.0\n");
 }
 
 
-int print_help()
+void print_help()
 {
     print_version();
     printf("%s\n", "--------------------");
@@ -45,12 +47,19 @@ int print_help()
     printf("%s\n", "-h,--help         Print this help and exit");
     printf("%s\n", "-v,--version      Print the current version and exit");
     printf("%s\n", "-r,--rows         Specify how many rows of cells to iterate over");
+    printf("%s\n", "                  minimum: 2");
     printf("%s\n", "-c,--cols         Specify how many columns of cells to iterate over");
+    printf("%s\n", "                  minimum: 2");
+    printf("%s\n", "-m,--max-value    Maximum value of any given cell");
+    printf("%s\n", "                  default: 1 (this reproduces Conways Game of Life)");
+    printf("%s\n", "                  minimum: 1");
+    /*
     printf("%s\n", "-R,--range        Specify a range of values [X-Y]");
-    printf("%s\n", "                  default: 0-1, this reproduces Conways Game of Life");
+    printf("%s\n", "                  default: 0-1 (this reproduces Conways Game of Life)");
     printf("%s\n", "-m,--map          Specify a map for values");
     printf("%s\n", "                  Each value can be space, comma, or semi-colon delimited");
     printf("%s\n", "                  default: \"0= ,1=1,2=2,3=3,...Y=Y\"");
+    */
     printf("%s\n", "-g,--generations  Specify maximum number of generations to print");
     printf("%s\n", "                  minimum: 1");
     printf("%s", "\n");
@@ -58,52 +67,28 @@ int print_help()
 }
 
 
-int parse_range(char * range, int * min, int * max)
+void parse_arguments(int argc, char ** argv, int * rows, int * cols, int * max, int * generations)
 {
-    char * token = strtok(range, "-");
-
-    if (token == NULL) {
-        return FALSE;
-    }
-
-    * min = atoi(token);
-
-    token = strtok(NULL, "-");
-
-    if (token == NULL) {
-        return FALSE;
-    }
-
-    * max = atoi(token);
-
-    if ((* min) < (* max)) {
-        if ((* min) >= 0 && (* max) <= MAX_RANGE_MAX) {
-            return TRUE;
-        }
-    }
-
-    return FALSE;
-}
-
-
-int parse_arguments(int argc, char **argv, game_options * opts)
-{
-    char c = 0;
+    char c           = 0;
     int option_index = 0;
+    int errors       = 0;
 
     static struct option long_options[] = {
         { "help",        no_argument,       0, 'h' },
         { "version",     no_argument,       0, 'v' },
-        { "rows",        optional_argument, 0, 'r' },
-        { "cols",        optional_argument, 0, 'c' },
+        { "rows",        required_argument, 0, 'r' },
+        { "cols",        required_argument, 0, 'c' },
+        { "max-value",   required_argument, 0, 'm' },
+        /*
         { "range",       optional_argument, 0, 'R' },
         { "map",         optional_argument, 0, 'm' },
-        { "generations", optional_argument, 0, 'g' },
+        */
+        { "generations", required_argument, 0, 'g' },
     };
 
     while (TRUE) {
 
-        c = getopt_long(argc, argv, "hvr:c:R:m:g:", long_options, &option_index);
+        c = getopt_long(argc, argv, "hvr:c:m:g:", long_options, &option_index);
 
         if (c == -1) {
             break;
@@ -112,352 +97,256 @@ int parse_arguments(int argc, char **argv, game_options * opts)
         switch (c) {
 
         case 'h':
-            return print_help();
+            print_help();
+            exit(1);
             break;
 
         case 'v':
-            return print_version();
+            print_version();
+            exit(1);
             break;
 
         case 'r':
-            opts->rows = atoi(optarg);
+            * rows = atoi(optarg);
             break;
 
         case 'c':
-            opts->cols = atoi(optarg);
-            break;
-
-        case 'R':
-            opts->range_string = strdup(optarg);
-            //result = parse_range(optarg, &range_min, &range_max);
+            * cols = atoi(optarg);
             break;
 
         case 'm':
-            opts->map_string = strdup(optarg);
+            * max = atoi(optarg);
             break;
 
         case 'g':
-            opts->max_generations = atoi(optarg);
+            * generations = atoi(optarg);
             break;
         }
     }
-}
 
+    if (* rows < 2) {
+        printf("%s\n", "Invalid number of rows!");
+        errors++;
+    }
 
-int set_default_map(game_options * opts)
-{
-    int i = 0;
+    if (* cols < 2) {
+        printf("%s\n", "Invalid number of cols!");
+        errors++;
+    }
 
-    opts->max_default_map_entry_len = snprintf(NULL, 0, "%d", opts->range_max);
+    if (* max < 1) {
+        printf("%s\n", "Invalid maximum cell value!");
+        errors++;
+    }
 
-    // but first set the default values - we can override these when
-    // we parse the map string
-    for (i = 0; i <= opts->range_max; i++) {
-        opts->map[i] = calloc(opts->max_default_map_entry_len + 1, sizeof(char));
-        snprintf(opts->map[i], opts->max_default_map_entry_len + 1, "%d", i);
+    if (* generations < 0) {
+        printf("%s\n", "Invalid number of generations (we've not implemented time travel)!");
+        errors++;
+    }
+
+    if (errors > 0) {
+        exit(2);
     }
 }
 
-
-int parse_map_string(game_options * opts)
+void seed_grid(int rows, int cols, int (* generation)[cols], int max)
 {
-    int i = 0;
-    char * ptr = NULL;
-
-    if (opts->map_string == NULL) {
-        return TRUE;
-    }
-
-    // now lets parse the map_string and get our matches setup
-    ptr = strtok(opts->map_string, "; ,");
-    while (ptr != NULL) {
-
-        i = 0;
-
-        char key[opts->max_default_map_entry_len];
-        int map_key = 0;
-        char value[MAX_TEMP_BUFFER] = { 0 };
-        size_t value_len = 0;
-
-        char * token = strdup(ptr);
-        char * free_token = token;
-        char c = 0;
-        int processing_key = TRUE;
-
-        // probably a much more efficient way to do this
-        // i just didn't want to interrupt strtok on the potentially
-        // long string
-        while (c = *token++) {
-            if (processing_key == TRUE) {
-                if (c >= '0' && c <= '9') {
-                    key[i] = c;
-                }
-                else if (c == '=') {
-                    processing_key = FALSE;
-                    key[i] = 0;
-
-                    // just set it to -1 so it ends up at 0 on the
-                    // next pass for value[i]
-                    i = -1;
-                }
-            }
-            else {
-                value[i] = c;
-            }
-            i++;
-        }
-
-        value_len = strlen(value);
-
-        if (value_len > opts->max_map_entry_len) {
-            opts->max_map_entry_len = value_len;
-        }
-
-        map_key = atoi(key);
-
-        // first make sure the map_key is in appropriate range
-        if (map_key >= 0 && map_key <= opts->range_max) {
-
-            // we can just overwrite the current map[key] hopefully..
-            if (value_len > opts->max_default_map_entry_len) {
-                free(opts->map[map_key]);
-                opts->map[map_key] = calloc(value_len + 1, sizeof(char));
-            }
-
-            // update the value
-            snprintf(opts->map[map_key], value_len + 1, "%s", value);
-        }
-
-        ptr = strtok(NULL, "; ,");
-        free(free_token);
-    }
-
-    free(opts->map_string);
-}
-
-
-int sanity_check(game_options * opts)
-{
-
-}
-
-
-int main (int argc, char **argv)
-{
-    int result = 0;
     int i = 0;
     int j = 0;
+    int r = 0;
+
+    srand(time(NULL));
+
+    for (i = 0; i < rows; i++) {
+        for (j = 0; j < cols; j++) {
+
+            r = rand();
+
+            generation[i][j] = r % (max + 1);
+
+            if (FULL_RANDOM == FALSE) {
+                if (r % 100 > PERCENTAGE_DEAD) {
+                    generation[i][j] = 0;
+                }
+            }
+        }
+    }
+}
+
+
+void initialize_grid(int rows, int cols, int (* generation)[cols])
+{
+    int i = 0;
+    int j = 0;
+
+    for (i = 0; i < rows; i++) {
+        for (j = 0; j < cols; j++) {
+            generation[i][j] = 0;
+        }
+    }
+}
+
+
+void print_grid(int rows, int cols, int (* generation)[cols])
+{
+    int i = 0;
+    int j = 0;
+
+    for (i = 0; i < rows; i++) {
+        for (j = 0; j < cols; j++) {
+            if (generation[i][j] == 0) {
+                printf("%s", " ");
+            }
+            else {
+                printf("%d", generation[i][j]);
+            }
+        }
+        printf("%s\n", "");
+    }
+}
+
+
+int get_neighbors_value(int rows, int cols, int (* this)[cols], int cur_row, int cur_col)
+{
+    int i = 0;
+    int j = 0;
+    int neighbors = 0;
 
     int row = 0;
     int col = 0;
 
-    int r = 0;
+    for (i = -1; i <= 1; i++) {
 
-    int value = 0;
+        row = cur_row + i;
+        if (row < 0 || row > (rows - 1)) {
+            continue;
+        }
+
+        for (j = -1; j <= 1; j++) {
+
+            col = cur_col + j;
+            if (col < 0 || col > (cols - 1)) {
+                continue;
+            }
+
+            neighbors += this[row][col];
+        }
+    }
+
+    neighbors -= this[cur_row][cur_col];
+
+    return neighbors;
+}
+
+
+void decay_grid(int rows, int cols, int (* this)[cols], int (* next)[cols], int max)
+{
+    int i = 0;
+    int j = 0;
+    int cell      = 0;
     int neighbors = 0;
 
-    int generations = 0;
+    for (i = 0; i < rows; i++) {
+        for (j = 0; j < cols; j++) {
+            neighbors = get_neighbors_value(rows, cols, this, i, j);
+            cell = this[i][j];
 
-    game_options * opts = calloc(1, sizeof(game_options));
+            /* already dead cell */
+            if (cell == 0) {
 
+                if (neighbors > 0) {
+                    int k = 0;
 
-    srand(time(NULL));
+                    /* i'm not sure what sort of pet semetary we're running
+                       that allows 3(COME_ALIVE) decaying cells to bring a
+                       dead one back to life, but hey... */
+                    for (k = 1; k <= max; k++) {
+                        if (neighbors == (i * COME_ALIVE)) {
+                            next[i][j] = k;
+                        }
+                    }
+                }
+            }
 
+            /* if we're in that sweet spot of no decay */
+            else if (neighbors >= (cell * STAY_ALIVE_MIN) && neighbors <= (cell * COME_ALIVE)) {
+                next[i][j] = cell;
+            }
 
-    // calculate final map
-    opts->map = calloc(opts->range_max + 1, sizeof(* (opts->map)));
-
-
-    // thanks c99
-    int current_iteration[opts->rows][opts->cols];
-    int next_iteration[opts->rows][opts->cols];
-
-
-    // TODO: accept initial seed input
-    // generate initial seed
-    for (row = 0; row < opts->rows; row++) {
-        for (col = 0; col < opts->cols; col++) {
-
-            r = rand();
-
-            current_iteration[row][col] = r % (opts->range_max - opts->range_min + 1);
-
-            if (FULL_RANDOM == FALSE) {
-                if (r % 100 > PERCENTAGE_DEAD) {
-                    current_iteration[row][col] = 0;
+            /* everything else is in some sort of decay */
+            else {
+                next[i][j] = cell - 1;
+                if (next[i][j] < 0) {
+                    next[i][j] = 0;
                 }
             }
         }
     }
+}
+
+
+void next_grid(int rows, int cols, int (* this)[cols], int (* next)[cols])
+{
+    int i = 0;
+    int j = 0;
+
+    for (i = 0; i < rows; i++) {
+        for (j = 0; j < cols; j++) {
+            this[i][j] = next[i][j];
+            next[i][j] = 0;
+        }
+    }
+}
+
+
+void print_line_seperator(int cols)
+{
+    int i = 0;
+
+    for (i = 0; i < cols; i++) {
+        printf("%s", "-");
+    }
+
+    printf("%s", "\n");
+}
+
+
+int main(int argc, char ** argv)
+{
+    int rows        = 0;
+    int cols        = 0;
+    int max         = 1;
+    int generations = 0;
+    int generation  = 0;
+
+    parse_arguments(argc, argv, &rows, &cols, &max, &generations);
+
+    int this_generation[rows][cols];
+    int next_generation[rows][cols];
+
+    initialize_grid(rows, cols, this_generation);
+    initialize_grid(rows, cols, next_generation);
+
+    seed_grid(rows, cols, this_generation, max);
 
     while (TRUE) {
-
-        if (opts->max_generations > 0 && opts->max_generations == generations) {
+        if (generations > 0 && generation >= generations) {
             break;
         }
 
-        // print line seperator between generations
-        for (i = 0; i < opts->cols; i++) {
-            for (j = 0; j < opts->max_map_entry_len + 1; j++) {
-                printf("%s", "-");
-            }
-        }
-        printf("%s", "\n");
+        print_grid(rows, cols, this_generation);
+        decay_grid(rows, cols, this_generation, next_generation, max);
+        next_grid(rows, cols, this_generation, next_generation);
 
-        // display current iteration
-        for (row = 0; row < opts->rows; row++) {
-            for (col = 0; col < opts->cols; col++) {
-
-                char fmt_string[MAX_TEMP_BUFFER] = { 0 };
-                snprintf(fmt_string, MAX_TEMP_BUFFER, "%%%ds", opts->max_map_entry_len);
-
-                printf(fmt_string, opts->map[current_iteration[row][col]]);
-
-                // print a space unless we're the last col
-                if (col < opts->cols - 1) {
-                    printf("%s", " ");
-                }
-            }
-            printf("%s", "\n");
+        /* if generations == 1, then we're only going to print the
+           one generation and then exit. we don't need a line sep */
+        if (generations != 1) {
+            print_line_seperator(cols);
         }
 
-        // get next iteration based on current iteration
-        for (row = 0; row < opts->rows; row++) {
-            for (col = 0; col < opts->cols; col++) {
-
-                value = current_iteration[row][col];
-
-                // top left corner
-                if (row == 0 && col == 0) {
-                    neighbors = current_iteration[row]  [RIGHT] +
-                                current_iteration[BELOW][RIGHT] +
-                                current_iteration[BELOW][col];
-                }
-                // top right corner
-                else if (row == 0 && col == opts->cols - 1) {
-                    neighbors = current_iteration[row]  [LEFT] +
-                                current_iteration[BELOW][LEFT] +
-                                current_iteration[BELOW][col];
-                }
-                // bottom left corner
-                else if (row == opts->rows - 1 && col == 0) {
-                    neighbors = current_iteration[ABOVE][col] +
-                                current_iteration[ABOVE][RIGHT] +
-                                current_iteration[row]  [RIGHT];
-                }
-                // bottom right corner
-                else if (row == opts->rows - 1 && col == opts->cols - 1) {
-                    neighbors = current_iteration[row]  [LEFT] +
-                                current_iteration[ABOVE][LEFT] +
-                                current_iteration[ABOVE][col];
-                }
-                // top edge
-                else if (row == 0) {
-                    neighbors = current_iteration[row]  [LEFT] +
-                                current_iteration[BELOW][LEFT] +
-                                current_iteration[BELOW][col] +
-                                current_iteration[BELOW][RIGHT] +
-                                current_iteration[row]  [RIGHT];
-                }
-                // left edge
-                else if (col == 0) {
-                    neighbors = current_iteration[ABOVE][col] +
-                                current_iteration[ABOVE][RIGHT] +
-                                current_iteration[row]  [RIGHT] +
-                                current_iteration[BELOW][RIGHT] +
-                                current_iteration[BELOW][col];
-                }
-                // right edge
-                else if (col == opts->cols - 1) {
-                    neighbors = current_iteration[ABOVE][col] +
-                                current_iteration[ABOVE][LEFT] +
-                                current_iteration[row]  [LEFT] +
-                                current_iteration[BELOW][LEFT] +
-                                current_iteration[BELOW][col];
-                }
-                // bottom edge
-                else if (row == opts->rows - 1) {
-                    neighbors = current_iteration[row]  [LEFT] +
-                                current_iteration[ABOVE][LEFT] +
-                                current_iteration[ABOVE][col] +
-                                current_iteration[ABOVE][RIGHT] +
-                                current_iteration[row]  [RIGHT];
-                }
-                // everything not on an edge
-                else {
-                    neighbors = current_iteration[ABOVE][LEFT] +
-                                current_iteration[ABOVE][col] +
-                                current_iteration[ABOVE][RIGHT] +
-                                current_iteration[row]  [RIGHT] +
-                                current_iteration[BELOW][RIGHT] +
-                                current_iteration[BELOW][col] +
-                                current_iteration[BELOW][LEFT] +
-                                current_iteration[row]  [LEFT];
-                }
-
-                /*
-                * < 200% neighbor value (2 live cells) will kill a live cell
-                * >= 200% neighbor value (2 live cells) and <= 300% (3 live cells) will keep a cell alive
-                * == 300% (3 live cells) will bring a dead cell to life
-                * > 300% (3 live cells) will kill a live cell
-                * We can adjust these slightly to account for decay:
-                    * < 200% neighbor value will decay a living cell, eventually to death (by decrementing its value by 1)
-                */
-
-                // currently dead cell
-                if (value == opts->range_min) {
-
-                    // bring it alive, boys
-                    /*
-                    if (neighbors > range_min && neighbors == range_max * COME_ALIVE) {
-                        next_iteration[row][col] = range_max;
-                    }
-                    */
-                    if (neighbors > opts->range_min) {
-
-                        // i don't think 3 decaying cells should be able to create a fully
-                        // healthy cell.. open for discussion...
-                        for (i = opts->range_min + 1; i <= opts->range_max; i++) {
-                            if (neighbors == i * COME_ALIVE) {
-                                next_iteration[row][col] = i;
-                            }
-                        }
-                    }
-
-                    continue;
-                }
-
-                // stay the same value..
-                if (neighbors >= value * STAY_ALIVE_MIN && neighbors <= value * COME_ALIVE) {
-                    next_iteration[row][col] = value;
-                }
-
-                // everything else is in some state of decay
-                if (neighbors < value * STAY_ALIVE_MIN || neighbors > value * COME_ALIVE) {
-                    next_iteration[row][col] = value - 1;
-                    if (next_iteration[row][col] < opts->range_min) {
-                        next_iteration[row][col] = opts->range_min;
-                    }
-                }
-            }
-        }
-
-        // set current iteration to next iteration
-        for (row = 0; row < opts->rows; row++) {
-            for (col = 0; col < opts->cols; col++) {
-                current_iteration[row][col] = next_iteration[row][col];
-            }
-        }
-
+        generation++;
         sleep(1);
-        generations++;
     }
-
-    for (i = 0; i <= opts->range_max; i++) {
-        free(opts->map[i]);
-    }
-    free(opts->map);
-    free(opts);
 
     return 0;
 }
