@@ -53,21 +53,29 @@ void print_help()
     printf("%s\n", "-m,--max-value    Maximum value of any given cell");
     printf("%s\n", "                  default: 1 (this reproduces Conways Game of Life)");
     printf("%s\n", "                  minimum: 1");
-    /*
-    printf("%s\n", "-R,--range        Specify a range of values [X-Y]");
-    printf("%s\n", "                  default: 0-1 (this reproduces Conways Game of Life)");
-    printf("%s\n", "-m,--map          Specify a map for values");
-    printf("%s\n", "                  Each value can be space, comma, or semi-colon delimited");
-    printf("%s\n", "                  default: \"0= ,1=1,2=2,3=3,...Y=Y\"");
-    */
     printf("%s\n", "-g,--generations  Specify maximum number of generations to print");
     printf("%s\n", "                  minimum: 1");
+    printf("%s\n", "-L,--left-pad     Specify amount of padding to the left of each cells value");
+    printf("%s\n", "-R,--right-pad    Specify amount of padding to the right of each cells value");
+    printf("%s\n", "-P,--pad-char     The padding character");
+    printf("%s\n", "                  default: \" \" (only uses first character of string)");
+    printf("%s\n", "-M,--char-map     Specify a character map for values");
+    printf("%s\n", "                  (Key/values are separated by commas)");
+    printf("%s\n", "                  default: \"0= ,1=1,2=2,3=3,...,X=X\"");
+    printf("%s\n", "                  hint: Given a max-value of 10 (range of 0-10), you");
+    printf("%s\n", "                        don't need to specify the entire range, simply");
+    printf("%s\n", "                        \"10=A\" would allow for 0 to be \" \", all of");
+    printf("%s\n", "                        the other integers to be their values, and then");
+    printf("%s\n", "                        substitute 10 with \"A\"");
     printf("%s", "\n");
     printf("%s", "\n");
 }
 
 
-void parse_arguments(int argc, char ** argv, int * rows, int * cols, int * max, int * generations)
+void parse_arguments(int argc, char ** argv, 
+                     int * rows, int * cols, int * max, int * generations,
+                     int * pad_left, int * pad_right, char * pad_char,
+                     char * map)
 {
     char c           = 0;
     int option_index = 0;
@@ -78,11 +86,10 @@ void parse_arguments(int argc, char ** argv, int * rows, int * cols, int * max, 
         { "version",     no_argument,       0, 'v' },
         { "rows",        required_argument, 0, 'r' },
         { "cols",        required_argument, 0, 'c' },
-        { "max-value",   required_argument, 0, 'm' },
-        /*
-        { "range",       optional_argument, 0, 'R' },
-        { "map",         optional_argument, 0, 'm' },
-        */
+        { "left-pad",    required_argument, 0, 'L' },
+        { "right-pad",   required_argument, 0, 'R' },
+        { "pad-char",    required_argument, 0, 'P' },
+        { "char-map",    required_argument, 0, 'M' },
         { "generations", required_argument, 0, 'g' },
     };
 
@@ -121,6 +128,22 @@ void parse_arguments(int argc, char ** argv, int * rows, int * cols, int * max, 
         case 'g':
             * generations = atoi(optarg);
             break;
+
+        case 'L':
+            * pad_left = atoi(optarg);
+            break;
+
+        case 'R':
+            * pad_right = atoi(optarg);
+            break;
+
+        case 'P':
+            * char_pad = optarg[0];
+            break;
+
+        case 'M':
+            map = optarg;
+            break;
         }
     }
 
@@ -141,6 +164,16 @@ void parse_arguments(int argc, char ** argv, int * rows, int * cols, int * max, 
 
     if (* generations < 0) {
         printf("%s\n", "Invalid number of generations (we've not implemented time travel)!");
+        errors++;
+    }
+
+    if (* pad_left < 0) {
+        printf("%s\n", "Invalid left padding!");
+        errors++;
+    }
+
+    if (* pad_right < 0) {
+        printf("%s\n", "Invalid right padding!");
         errors++;
     }
 
@@ -311,15 +344,116 @@ void print_line_seperator(int cols)
 }
 
 
+int get_printed_integer_len(int val)
+{
+    /* max amount of possible chars is 10 (2,147,483,648) */
+    char printed_number[12] = { 0 };
+    snprintf(printed_number, 12, "%d", val);
+    return (int) strlen(printed_number);
+}
+
+
+int get_widest_map_entry(int max, char * orig_map)
+{
+    /* if no map specified, just return the length of the largest
+       possible value */
+    if (orig_map == NULL) {
+        return get_printed_integer_len(max);
+    }
+
+    char * map      = strdup(orig_map);
+    char * free_map = map;
+    char * token    = NULL;
+    char * key      = NULL;
+    char * val      = NULL;
+
+    size_t longest  = 0;
+
+    while ((token = strtok_r(map, ",", &map))) {
+
+        key = strtok_r(token, "=", &token);
+        if (key == NULL || atoi(key) < 0 || atoi(key) > max) {
+            continue;
+        }
+
+        val = strtok_r(token, "=", &token);
+        if (val == NULL) {
+            continue;
+        }
+
+        if (strlen(val) > longest) {
+            longest = strlen(val);
+        }
+    }
+
+    free(free_map);
+    return (int) longest;
+}
+
+
+char * get_char_map_entry(int max, int lookup, char * orig_map)
+{
+    char * str  = NULL;
+    int lookup_len = get_printed_integer_len(lookup) + 1;
+
+    /* this shouldn't ever happen... */
+    if (lookup < 0 || lookup > max) {
+        return NULL;
+    }
+
+    if (orig_map != NULL) {
+        char * map      = strdup(orig_map);
+        char * free_map = map;
+        char * token    = NULL;
+        char * key      = NULL;
+        char * val      = NULL;
+
+        while ((token = strtok_r(map, ",", &map))) {
+
+            key = strtok_r(token, "=", &token);
+            if (key == NULL || atoi(key) != lookup) {
+                continue;
+            }
+
+            val = strtok_r(token, "=", &token);
+            if (val == NULL) {
+                /* the fact we made it this far means that
+                   key == lookup, so need to continue the search */
+                break;
+            }
+
+            str = strdup(val);
+            break;
+        }
+
+        free(free_map);
+    }
+
+    /* if orig_map is NULL or we never found a match,
+       just return lookup as a string */
+    if (str == NULL) {
+        str = calloc(lookup_len, sizeof(char));
+        snprintf(str, lookup_len, "%d", lookup);
+    }
+
+    return str;
+}
+
+
 int main(int argc, char ** argv)
 {
     int rows        = 0;
     int cols        = 0;
     int max         = 1;
     int generations = 0;
+    int pad_left    = 0;
+    int pad_right   = 0;
+    char pad_char   = ' ';
+    char * map      = NULL;
+
     int generation  = 0;
 
-    parse_arguments(argc, argv, &rows, &cols, &max, &generations);
+    parse_arguments(argc, argv, &rows, &cols, &max, &generations, &pad_left, &pad_right, &pad_char, map);
 
     int this_generation[rows][cols];
     int next_generation[rows][cols];

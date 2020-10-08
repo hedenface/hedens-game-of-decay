@@ -27,6 +27,9 @@ int get_neighbors_value(int rows, int cols, int (* this)[cols], int cur_row, int
 void decay_grid(int rows, int cols, int (* this)[cols], int (* next)[cols], int max);
 void next_grid(int rows, int cols, int (* this)[cols], int (* next)[cols]);
 void print_line_seperator(int cols);
+int get_printed_integer_len(int val);
+int get_widest_map_entry(int max, char * orig_map);
+char * get_char_map_entry(int max, int lookup, char * orig_map);
 int main(int argc, char ** argv);
 
 
