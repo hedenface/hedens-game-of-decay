@@ -20,21 +20,19 @@ You should now have a binary `game-of-decay`.
 
 ## Executing
 
-        { "help",        no_argument,       0, 'h' },
-        { "version",     no_argument,       0, 'v' },
-        { "rows",        required_argument, 0, 'r' },
-        { "cols",        required_argument, 0, 'c' },
-        { "max-value",   required_argument, 0, 'm' },
-        { "generations", required_argument, 0, 'g' },
-
 The binary takes a few options:
 
 * `-h`, `--help`: Print help page and quit
 * `-v`, `--version`: Print version information and quit
-* `-r`, `--rows`: Specify the number of rows for the board (*minimum: `1`*)
-* `-c`, `--cols`: Specify the number of cols for the board (*minimum: `1`*)
+* `-r`, `--rows`: The amount of rows in the board (*minimum: `1`*)
+* `-c`, `--cols`: The amount of columns in the board (*minimum: `1`*)
 * `-m`, `--max-value`: The maximum value of any cell (currently any value greater than 9 is going to cause formatting issues) (*default: `1`* [this mimics Conways Game of Life]) (*minimum: `1`*)
-* `-g`, `--generations`: Maximum amount of generations to cycle (*minimum: `1`*)
+* `-g`, `--generations`: The maximum amount of generations to print (*minimum: `1`*)
+* `-L`, `--left-pad`: The amount of padding to the left of each cells value
+* `-R`, `--right-pad`: The amount of padding to the right of each cells value
+* `-P`, `--pad-char`: The padding character (*default: `' '`*) **(only uses first character of string)**
+* `-M`, `--char-map`: The character map for values. (Key/values are separated by commas) (*default: `"0= ,1=1,2=2,3=3,...,X=X"`*)
+    * ***hint***: Given a max-value of 10 (range of 0-10), you don't need to specify the entire range, simply `"10=A"` would allow for 0 to be `" "`, all of the other integers to be their values, and then substitute 10 with `"A"`.
 
 ## Original Rules (Conways Game of Life)
 
