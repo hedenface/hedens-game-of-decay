@@ -75,7 +75,7 @@ void print_help()
 void parse_arguments(int argc, char ** argv, 
                      int * rows, int * cols, int * max, int * generations,
                      int * pad_left, int * pad_right, char * pad_char,
-                     char * map)
+                     char ** map)
 {
     char c           = 0;
     int option_index = 0;
@@ -86,16 +86,16 @@ void parse_arguments(int argc, char ** argv,
         { "version",     no_argument,       0, 'v' },
         { "rows",        required_argument, 0, 'r' },
         { "cols",        required_argument, 0, 'c' },
+        { "generations", required_argument, 0, 'g' },
         { "left-pad",    required_argument, 0, 'L' },
         { "right-pad",   required_argument, 0, 'R' },
         { "pad-char",    required_argument, 0, 'P' },
         { "char-map",    required_argument, 0, 'M' },
-        { "generations", required_argument, 0, 'g' },
     };
 
     while (TRUE) {
 
-        c = getopt_long(argc, argv, "hvr:c:m:g:", long_options, &option_index);
+        c = getopt_long(argc, argv, "hvr:c:m:g:L:R:P:M:", long_options, &option_index);
 
         if (c == -1) {
             break;
@@ -138,11 +138,11 @@ void parse_arguments(int argc, char ** argv,
             break;
 
         case 'P':
-            * char_pad = optarg[0];
+            * pad_char = optarg[0];
             break;
 
         case 'M':
-            map = optarg;
+            * map = strdup(optarg);
             break;
         }
     }
@@ -220,19 +220,14 @@ void initialize_grid(int rows, int cols, int (* generation)[cols])
 }
 
 
-void print_grid(int rows, int cols, int (* generation)[cols])
+void print_grid(int rows, int cols, int (* generation)[cols], char ** char_map)
 {
     int i = 0;
     int j = 0;
 
     for (i = 0; i < rows; i++) {
         for (j = 0; j < cols; j++) {
-            if (generation[i][j] == 0) {
-                printf("%s", " ");
-            }
-            else {
-                printf("%d", generation[i][j]);
-            }
+            printf("%s", char_map[generation[i][j]]);
         }
         printf("%s\n", "");
     }
@@ -432,6 +427,13 @@ char * get_char_map_entry(int max, int lookup, char * orig_map)
     /* if orig_map is NULL or we never found a match,
        just return lookup as a string */
     if (str == NULL) {
+
+        /* if we didn't find a match, the only value we override
+           by default is 0 - we use a space for that */
+        if (lookup == 0) {
+            return strdup(" ");
+        }
+
         str = calloc(lookup_len, sizeof(char));
         snprintf(str, lookup_len, "%d", lookup);
     }
@@ -440,20 +442,55 @@ char * get_char_map_entry(int max, int lookup, char * orig_map)
 }
 
 
+char ** setup_char_map(int max, char * map)
+{
+    int i = 0;
+
+    char ** char_map = calloc(max + 1, sizeof(* char_map));
+
+    for (i = 0; i <= max; i++) {
+        char_map[i] = get_char_map_entry(max, i, map);
+    }
+
+    return char_map;
+}
+
+
+void free_char_map(int max, char ** char_map)
+{
+    int i = 0;
+
+    if (char_map == NULL) {
+        return;
+    }
+
+    for (i = 0; i <= max; i++) {
+        if (char_map[i] != NULL) {
+            free(char_map[i]);
+        }
+    }
+
+    free(char_map);
+}
+
+
 int main(int argc, char ** argv)
 {
-    int rows        = 0;
-    int cols        = 0;
-    int max         = 1;
-    int generations = 0;
-    int pad_left    = 0;
-    int pad_right   = 0;
-    char pad_char   = ' ';
-    char * map      = NULL;
+    int rows         = 0;
+    int cols         = 0;
+    int max          = 1;
+    int generations  = 0;
+    int pad_left     = 0;
+    int pad_right    = 0;
+    char pad_char    = ' ';
+    char * map       = NULL;
+    char ** char_map = NULL;
 
     int generation  = 0;
 
-    parse_arguments(argc, argv, &rows, &cols, &max, &generations, &pad_left, &pad_right, &pad_char, map);
+    parse_arguments(argc, argv, &rows, &cols, &max, &generations, &pad_left, &pad_right, &pad_char, &map);
+
+    char_map = setup_char_map(max, map);
 
     int this_generation[rows][cols];
     int next_generation[rows][cols];
@@ -468,7 +505,7 @@ int main(int argc, char ** argv)
             break;
         }
 
-        print_grid(rows, cols, this_generation);
+        print_grid(rows, cols, this_generation, char_map);
         decay_grid(rows, cols, this_generation, next_generation, max);
         next_grid(rows, cols, this_generation, next_generation);
 
@@ -480,6 +517,11 @@ int main(int argc, char ** argv)
 
         generation++;
         sleep(1);
+    }
+
+    free_char_map(max, char_map);
+    if (map != NULL) {
+        free(map);
     }
 
     return 0;
