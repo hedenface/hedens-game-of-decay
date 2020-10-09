@@ -30,7 +30,6 @@ The binary takes a few options:
 * `-g`, `--generations`: The maximum amount of generations to print (*minimum: `1`*)
 * `-L`, `--left-pad`: The amount of padding to the left of each cells value
 * `-R`, `--right-pad`: The amount of padding to the right of each cells value
-* `-P`, `--pad-char`: The padding character (*default: `' '`*) **(only uses first character of string)**
 * `-M`, `--char-map`: The character map for values. (Key/values are separated by commas) (*default: `"0= ,1=1,2=2,3=3,...,X=X"`*)
     * ***hint***: Given a max-value of 10 (range of 0-10), you don't need to specify the entire range, simply `"10=A"` would allow for 0 to be `" "`, all of the other integers to be their values, and then substitute 10 with `"A"`.
 
