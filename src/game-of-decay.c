@@ -57,8 +57,6 @@ void print_help()
     printf("%s\n", "                  minimum: 1");
     printf("%s\n", "-L,--left-pad     The amount of padding to the left of each cells value");
     printf("%s\n", "-R,--right-pad    The amount of padding to the right of each cells value");
-    printf("%s\n", "-P,--pad-char     The padding character");
-    printf("%s\n", "                  default: \" \" (only uses first character of string)");
     printf("%s\n", "-M,--char-map     The character map for values");
     printf("%s\n", "                  (Key/values are separated by commas)");
     printf("%s\n", "                  default: \"0= ,1=1,2=2,3=3,...,X=X\"");
@@ -74,8 +72,7 @@ void print_help()
 
 void parse_arguments(int argc, char ** argv, 
                      int * rows, int * cols, int * max, int * generations,
-                     int * pad_left, int * pad_right, char * pad_char,
-                     char ** map)
+                     int * pad_left, int * pad_right, char ** map)
 {
     char c           = 0;
     int option_index = 0;
@@ -135,10 +132,6 @@ void parse_arguments(int argc, char ** argv,
 
         case 'R':
             * pad_right = atoi(optarg);
-            break;
-
-        case 'P':
-            * pad_char = optarg[0];
             break;
 
         case 'M':
@@ -220,14 +213,14 @@ void initialize_grid(int rows, int cols, int (* generation)[cols])
 }
 
 
-void print_grid(int rows, int cols, int (* generation)[cols], char ** char_map)
+void print_grid(int rows, int cols, int (* generation)[cols], char ** char_map, char * cell_fmt)
 {
     int i = 0;
     int j = 0;
 
     for (i = 0; i < rows; i++) {
         for (j = 0; j < cols; j++) {
-            printf("%s", char_map[generation[i][j]]);
+            printf(cell_fmt, char_map[generation[i][j]]);
         }
         printf("%s\n", "");
     }
@@ -474,6 +467,40 @@ void free_char_map(int max, char ** char_map)
 }
 
 
+char * setup_cell_fmt(int pad_left, int pad_right, int max, char * map)
+{
+    char * cell_fmt = NULL;
+    char * right_padding = strdup("");
+
+    /* start with 1 for the null term */
+    int fmt_size = 1;
+
+    pad_left += get_widest_map_entry(max, map);
+
+    fmt_size += pad_left + strlen("%s");
+
+    if (pad_right > 0) {
+        int i = 0;
+
+        free(right_padding);
+        right_padding = calloc(pad_right + 1, sizeof(char));
+
+        for (i = 0; i < pad_right; i++) {
+            right_padding[i] = ' ';
+        }
+
+        fmt_size += pad_right;
+    }
+
+    cell_fmt = calloc(fmt_size, sizeof(char));
+
+    snprintf(cell_fmt, fmt_size, "%%%ds%s", pad_left, right_padding);
+
+    free(right_padding);
+    return cell_fmt;
+}
+
+
 int main(int argc, char ** argv)
 {
     int rows         = 0;
@@ -482,13 +509,13 @@ int main(int argc, char ** argv)
     int generations  = 0;
     int pad_left     = 0;
     int pad_right    = 0;
-    char pad_char    = ' ';
     char * map       = NULL;
     char ** char_map = NULL;
+    char * cell_fmt  = NULL;
 
     int generation  = 0;
 
-    parse_arguments(argc, argv, &rows, &cols, &max, &generations, &pad_left, &pad_right, &pad_char, &map);
+    parse_arguments(argc, argv, &rows, &cols, &max, &generations, &pad_left, &pad_right, &map);
 
     char_map = setup_char_map(max, map);
 
@@ -500,12 +527,14 @@ int main(int argc, char ** argv)
 
     seed_grid(rows, cols, this_generation, max);
 
+    cell_fmt = setup_cell_fmt(pad_left, pad_right, max, map);
+
     while (TRUE) {
         if (generations > 0 && generation >= generations) {
             break;
         }
 
-        print_grid(rows, cols, this_generation, char_map);
+        print_grid(rows, cols, this_generation, char_map, cell_fmt);
         decay_grid(rows, cols, this_generation, next_generation, max);
         next_grid(rows, cols, this_generation, next_generation);
 
@@ -519,6 +548,7 @@ int main(int argc, char ** argv)
         sleep(1);
     }
 
+    free(cell_fmt);
     free_char_map(max, char_map);
     if (map != NULL) {
         free(map);
