@@ -1,0 +1,12 @@
+
+INCLUDE_DIR=../include
+
+CC=@CC@
+CFLAGS=@CFLAGS@ -I$(INCLUDE_DIR)
+
+
+none: game-of-decay
+
+
+game-of-decay: game-of-decay.c
+	$(CC) $(CFLAGS) $^ -o $@
