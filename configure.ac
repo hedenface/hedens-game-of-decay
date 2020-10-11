@@ -8,6 +8,7 @@ AC_CHECK_HEADERS([string.h])
 AC_CHECK_HEADERS([getopt.h])
 AC_CHECK_HEADERS([time.h])
 AC_CHECK_HEADERS([unistd.h])
+AC_CHECK_HEADERS([sys/ioctl.h])
 
 AC_TYPE_SIZE_T
 
@@ -15,6 +16,7 @@ AC_FUNC_MALLOC
 
 AC_CHECK_FUNCS([strdup])
 AC_CHECK_FUNCS([snprintf])
+AC_CHECK_FUNCS([ioctl])
 
 AC_ARG_ENABLE(
     debugging,

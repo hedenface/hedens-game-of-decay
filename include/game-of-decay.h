@@ -48,13 +48,13 @@ void print_grid(int rows, int cols, int (* generation)[cols], char ** char_map, 
 int get_neighbors_value(int rows, int cols, int (* this)[cols], int cur_row, int cur_col);
 void decay_grid(int rows, int cols, int (* this)[cols], int (* next)[cols], int max);
 void next_grid(int rows, int cols, int (* this)[cols], int (* next)[cols]);
-void print_line_seperator(int cols);
 int get_printed_integer_len(int val);
 int get_widest_map_entry(int max, char * orig_map);
 char * get_char_map_entry(int max, int lookup, char * orig_map);
 char ** setup_char_map(int max, char * map);
 void free_char_map(int max, char ** char_map);
 char * setup_cell_fmt(int pad_left, int pad_right, int max, char * map);
+void get_term_size(int * rows, int * cols);
 
 
 #endif /* _GAME_OF_DECAY_H_ */
