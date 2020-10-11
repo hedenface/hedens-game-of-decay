@@ -675,6 +675,8 @@ SHELL'
 ac_subst_files=''
 ac_user_opts='
 enable_option_checking
+enable_debugging
+enable_coverage
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1300,6 +1302,13 @@ if test -n "$ac_init_help"; then
      short | recursive ) echo "Configuration of game-of-decay 0.0.0:";;
    esac
   cat <<\_ACEOF
+
+Optional Features:
+  --disable-option-checking  ignore unrecognized --enable/--with options
+  --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
+  --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
+  --enable-debugging      Pass debugging flags to the compiler
+  --enable-coverage       Pass coverage flags to the compiler
 
 Some influential environment variables:
   CC          C compiler command
@@ -2149,7 +2158,6 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-# Checks for programs.
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -2940,9 +2948,6 @@ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
-# Checks for libraries.
-
-# Checks for header files.
 
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
@@ -3402,7 +3407,6 @@ fi
 done
 
 
-# Checks for typedefs, structures, and compiler characteristics.
 ac_fn_c_check_type "$LINENO" "size_t" "ac_cv_type_size_t" "$ac_includes_default"
 if test "x$ac_cv_type_size_t" = xyes; then :
 
@@ -3415,7 +3419,74 @@ _ACEOF
 fi
 
 
-# Checks for library functions.
+for ac_header in stdlib.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "stdlib.h" "ac_cv_header_stdlib_h" "$ac_includes_default"
+if test "x$ac_cv_header_stdlib_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_STDLIB_H 1
+_ACEOF
+
+fi
+
+done
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for GNU libc compatible malloc" >&5
+$as_echo_n "checking for GNU libc compatible malloc... " >&6; }
+if ${ac_cv_func_malloc_0_nonnull+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  if test "$cross_compiling" = yes; then :
+  ac_cv_func_malloc_0_nonnull=no
+else
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#if defined STDC_HEADERS || defined HAVE_STDLIB_H
+# include <stdlib.h>
+#else
+char *malloc ();
+#endif
+
+int
+main ()
+{
+return ! malloc (0);
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_run "$LINENO"; then :
+  ac_cv_func_malloc_0_nonnull=yes
+else
+  ac_cv_func_malloc_0_nonnull=no
+fi
+rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
+  conftest.$ac_objext conftest.beam conftest.$ac_ext
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_func_malloc_0_nonnull" >&5
+$as_echo "$ac_cv_func_malloc_0_nonnull" >&6; }
+if test $ac_cv_func_malloc_0_nonnull = yes; then :
+
+$as_echo "#define HAVE_MALLOC 1" >>confdefs.h
+
+else
+  $as_echo "#define HAVE_MALLOC 0" >>confdefs.h
+
+   case " $LIBOBJS " in
+  *" malloc.$ac_objext "* ) ;;
+  *) LIBOBJS="$LIBOBJS malloc.$ac_objext"
+ ;;
+esac
+
+
+$as_echo "#define malloc rpl_malloc" >>confdefs.h
+
+fi
+
+
+
 for ac_func in strdup
 do :
   ac_fn_c_check_func "$LINENO" "strdup" "ac_cv_func_strdup"
@@ -3439,7 +3510,26 @@ fi
 done
 
 
-ac_config_files="$ac_config_files Makefile src/Makefile"
+# Check whether --enable-debugging was given.
+if test "${enable_debugging+set}" = set; then :
+  enableval=$enable_debugging; CFLAGS="${CFLAGS} -O0 -g3"
+
+fi
+
+
+# Check whether --enable-coverage was given.
+if test "${enable_coverage+set}" = set; then :
+  enableval=$enable_coverage; CFLAGS="${CFLAGS} -O0 -g3 -fprofile-arcs -ftest-coverage"
+
+fi
+
+
+ac_config_files="$ac_config_files Makefile"
+
+ac_config_files="$ac_config_files src/Makefile"
+
+ac_config_files="$ac_config_files test/Makefile"
+
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -4148,6 +4238,7 @@ do
   case $ac_config_target in
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
+    "test/Makefile") CONFIG_FILES="$CONFIG_FILES test/Makefile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac

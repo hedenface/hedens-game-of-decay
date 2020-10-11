@@ -3,3 +3,8 @@ Makefile
 autom4te.cache
 config.log
 config.status
+test/test
+test/coverage
+test/coverage.info-file
+*.gcno
+*.gcda
