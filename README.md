@@ -10,15 +10,14 @@ I started this particular implementation project with the standard name of "Conw
 
 ## Compiling
 
-It's a pretty basic Makefile.
-
-From the root of the project:
+From the root of the project
 
 ```bash
-make
+./configure
+make all
 ```
 
-You should now have a binary `game-of-decay`.
+You should now have a binary `game-of-decay` in the `src/` directory.
 
 ## Executing
 
