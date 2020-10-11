@@ -1,9 +1,84 @@
 
 SRC_DIR=src/
 
+VALGRIND_OPTS=--leak-check=full --show-leak-kinds=all --track-origins=yes 
+REDIRECT=>/dev/null 2>&1
 
-none: game-of-decay
+
+.PHONY: all test clean distclean
+
+
+none:
+	@echo "Use make with a target:"
+	@echo ""
+	@echo "    make all"
+	@echo ""
+	@echo "    make test"
+	@echo "    make memtest"
+	@echo "    make coverage"
+	@echo "    make report"
+	@echo ""
+	@echo "    make clean"
+	@echo "    make distclean"
+	@echo ""
+
+
+all: game-of-decay
 
 
 game-of-decay:
 	cd $(SRC_DIR) && $(MAKE) $@
+
+
+test:
+	cd test/ && $(MAKE) $@
+
+
+coverage: test
+	@if which lcov $(REDIRECT); then \
+		lcov -c -d . -o test/coverage.info-file; \
+		genhtml test/coverage.info-file -o test/coverage/; \
+		echo "Your coverage report is in test/coverage/index.html"; \
+	else \
+		echo "You must install lcov first!"; \
+	fi
+
+
+memtest: test
+	@if which valgrind $(REDIRECT); then \
+		if test -f test/test $(REDIRECT); then \
+			valgrind $(VALGRIND_OPTS) test/test; \
+		else \
+			echo "No test binary found. Did your build succeed?"; \
+		fi \
+	else \
+		echo "You must install valgrind first!"; \
+	fi
+
+
+report: coverage
+	@if which gcovr $(REDIRECT); then \
+		gcovr --exclude="test.c" -r . ; \
+	else \
+		echo "You must install gcovr first!"; \
+	fi
+
+
+clean:
+	cd src/     && $(MAKE) $@
+	cd test/    && $(MAKE) $@
+	rm -f config.log config.status
+
+
+distclean: clean
+	rm -rf autom4te.cache
+	rm -f Makefile
+	rm -f configure
+	cd src/     && $(MAKE) $@
+	cd test/    && $(MAKE) $@
+	@if which autoconf $(REDIRECT); then \
+		echo "Generating new configure script..."; \
+		autoconf; \
+	else \
+		echo "Unable to generate new configure script!"; \
+	fi \

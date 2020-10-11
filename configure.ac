@@ -11,10 +11,31 @@ AC_CHECK_HEADERS([unistd.h])
 
 AC_TYPE_SIZE_T
 
+AC_FUNC_MALLOC
+
 AC_CHECK_FUNCS([strdup])
 AC_CHECK_FUNCS([snprintf])
 
+AC_ARG_ENABLE(
+    debugging,
+    AC_HELP_STRING(
+        [--enable-debugging],
+        [Pass debugging flags to the compiler]
+    ),
+    [CFLAGS="${CFLAGS} -O0 -g3"]
+)
+
+AC_ARG_ENABLE(
+    coverage,
+    AC_HELP_STRING(
+        [--enable-coverage],
+        [Pass coverage flags to the compiler]
+    ),
+    [CFLAGS="${CFLAGS} -O0 -g3 -fprofile-arcs -ftest-coverage"]
+)
+
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([src/Makefile])
+AC_CONFIG_FILES([test/Makefile])
 
 AC_OUTPUT

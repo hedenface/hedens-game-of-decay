@@ -5,8 +5,20 @@ CC=@CC@
 CFLAGS=@CFLAGS@ -I$(INCLUDE_DIR)
 
 
-none: game-of-decay
+none: all
+
+
+all: game-of-decay
 
 
 game-of-decay: game-of-decay.c game-library.c
 	$(CC) $(CFLAGS) $^ -o $@
+
+
+clean:
+	rm -f game-of-decay
+	rm -f *.gcda *.gcno
+
+
+distclean: clean
+	rm -f  Makefile
