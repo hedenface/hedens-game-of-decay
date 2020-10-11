@@ -58,7 +58,7 @@ memtest: test
 
 report: coverage
 	@if which gcovr $(REDIRECT); then \
-		gcovr --exclude="test.c" -r . ; \
+		gcovr --exclude="test/test.c" -r . ; \
 	else \
 		echo "You must install gcovr first!"; \
 	fi

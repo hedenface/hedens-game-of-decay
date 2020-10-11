@@ -8,24 +8,17 @@
 #include "game-of-decay.h"
 
 
-/* if full random is false, then we pick about PERCENTAGE_DEAD % to
-   kill from the beginning, otherwise it gets weird :) */
-#define FULL_RANDOM     FALSE
-#define PERCENTAGE_DEAD 50
+void decay_exit(int code)
+{
+#if TESTING == 0
 
+    printf("exiting...\n");
+    exit(code);
 
-/*
-    * < 200% neighbor neighbors (2 live cells, STAY_ALIVE_MIN) will kill a live cell
-    * >= 200% neighbor neighbors (2 live cells, STAY_ALIVE_MIN) and <= 300% (3 live cells, COME_ALIVE) will keep a cell alive
-    * == 300% (3 live cells, COME_ALIVE) will bring a dead cell to life
-    * > 300% (3 live cells, COME_ALIVE) will kill a live cell
-*/
-#define STAY_ALIVE_MIN 2 /* 200% */
-#define COME_ALIVE     3 /* 300% */
-
-
-#define TRUE  1
-#define FALSE 0
+#else
+    printf("not exiting...\n");
+#endif
+}
 
 
 void print_version()
@@ -102,12 +95,12 @@ void parse_arguments(int argc, char ** argv,
 
         case 'h':
             print_help();
-            exit(1);
+            decay_exit(1);
             break;
 
         case 'v':
             print_version();
-            exit(1);
+            decay_exit(1);
             break;
 
         case 'r':
@@ -171,9 +164,10 @@ void parse_arguments(int argc, char ** argv,
     }
 
     if (errors > 0) {
-        exit(2);
+        decay_exit(2);
     }
 }
+
 
 void seed_grid(int rows, int cols, int (* generation)[cols], int max)
 {

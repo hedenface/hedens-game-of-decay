@@ -17,6 +17,28 @@
 #endif
 
 
+/* if full random is false, then we pick about PERCENTAGE_DEAD % to
+   kill from the beginning, otherwise it gets weird :) */
+#define FULL_RANDOM     FALSE
+#define PERCENTAGE_DEAD 50
+
+
+/*
+    * < 200% neighbor neighbors (2 live cells, STAY_ALIVE_MIN) will kill a live cell
+    * >= 200% neighbor neighbors (2 live cells, STAY_ALIVE_MIN) and <= 300% (3 live cells, COME_ALIVE) will keep a cell alive
+    * == 300% (3 live cells, COME_ALIVE) will bring a dead cell to life
+    * > 300% (3 live cells, COME_ALIVE) will kill a live cell
+*/
+#define STAY_ALIVE_MIN 2 /* 200% */
+#define COME_ALIVE     3 /* 300% */
+
+
+#ifndef TESTING
+#define TESTING 0
+#endif
+
+
+void decay_exit(int code);
 void print_version();
 void print_help();
 void parse_arguments(int argc, char ** argv, int * rows, int * cols, int * max, int * generations, int * pad_left, int * pad_right, char ** map);
