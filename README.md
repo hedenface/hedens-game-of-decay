@@ -2,6 +2,8 @@
 
 > Conways Game of Life... with a twist
 
+[![Build Status](https://travis-ci.org/hedenface/hedens-game-of-decay.svg?branch=master)](https://travis-ci.org/hedenface/hedens-game-of-decay)
+
 ## Rest In Peace John Horton Conway
 
 I started this particular implementation project with the standard name of "Conway's Game of Life" - and very shortly after I found out that he recently died due to complications of COVID-19. My heart goes out to his family first, but also every other nerd or geek whose life has been altered in some amazing way by this man.
