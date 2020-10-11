@@ -301,11 +301,18 @@ START_TEST (seed_and_print)
     seed_grid(3, 3, grid, 9);
     print_grid(3, 3, grid, char_map, fmt);
 
-    print_line_seperator(9);
-
     free_char_map(9, char_map);
     free(map);
     free(fmt);
+}
+END_TEST
+
+
+START_TEST (get_terminal_info)
+{
+    int rows = 0;
+    int cols = 0;
+    get_term_size(&rows, &cols);
 }
 END_TEST
 
@@ -321,6 +328,7 @@ Suite * coverage_suite(void)
 
     tcase_add_test(tc, print_help_and_version);
     tcase_add_test(tc, seed_and_print);
+    tcase_add_test(tc, get_terminal_info);
 
     suite_add_tcase(suite, tc);
 

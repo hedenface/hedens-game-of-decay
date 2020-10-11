@@ -4,6 +4,7 @@
 #include <getopt.h>
 #include <time.h>
 #include <unistd.h>
+#include <sys/ioctl.h>
 
 #include "game-of-decay.h"
 
@@ -212,11 +213,41 @@ void print_grid(int rows, int cols, int (* generation)[cols], char ** char_map, 
     int i = 0;
     int j = 0;
 
+    static int total_cell_width = 0;
+
+    int row_written = 0;
+
+    int term_rows = 0;
+    int term_cols = 0;
+    get_term_size(&term_rows, &term_cols);
+
+    if (total_cell_width == 0) {
+        int i       = 0;
+        int pad_num = 0;
+        int fmt_len = (int) strlen(cell_fmt);
+        sscanf(cell_fmt, "%%%d", &pad_num);
+
+        for (i = 0; i < fmt_len; i++) {
+            if (cell_fmt[i] == ' ') {
+                total_cell_width++;
+            }
+        }
+
+        total_cell_width += pad_num;
+    }
+
     for (i = 0; i < rows; i++) {
         for (j = 0; j < cols; j++) {
             printf(cell_fmt, char_map[generation[i][j]]);
         }
+
         printf("%s\n", "");
+        row_written++;
+    }
+
+    while (row_written < term_rows) {
+        printf("%s\n", "");
+        row_written++;
     }
 }
 
@@ -311,18 +342,6 @@ void next_grid(int rows, int cols, int (* this)[cols], int (* next)[cols])
             next[i][j] = 0;
         }
     }
-}
-
-
-void print_line_seperator(int cols)
-{
-    int i = 0;
-
-    for (i = 0; i < cols; i++) {
-        printf("%s", "-");
-    }
-
-    printf("%s", "\n");
 }
 
 
@@ -492,4 +511,14 @@ char * setup_cell_fmt(int pad_left, int pad_right, int max, char * map)
 
     free(right_padding);
     return cell_fmt;
+}
+
+
+void get_term_size(int * rows, int * cols)
+{
+    struct winsize win;
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &win);
+
+    * rows = win.ws_row;
+    * cols = win.ws_col;
 }

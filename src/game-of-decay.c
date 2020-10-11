@@ -16,6 +16,9 @@ int main(int argc, char ** argv)
     char ** char_map = NULL;
     char * cell_fmt  = NULL;
 
+    int term_rows    = 0;
+    int term_cols    = 0;
+
     int generation  = 0;
 
     parse_arguments(argc, argv, &rows, &cols, &max, &generations, &pad_left, &pad_right, &map);
@@ -33,6 +36,7 @@ int main(int argc, char ** argv)
     cell_fmt = setup_cell_fmt(pad_left, pad_right, max, map);
 
     while (TRUE) {
+
         if (generations > 0 && generation >= generations) {
             break;
         }
@@ -40,12 +44,6 @@ int main(int argc, char ** argv)
         print_grid(rows, cols, this_generation, char_map, cell_fmt);
         decay_grid(rows, cols, this_generation, next_generation, max);
         next_grid(rows, cols, this_generation, next_generation);
-
-        /* if generations == 1, then we're only going to print the
-           one generation and then exit. we don't need a line sep */
-        if (generations != 1) {
-            print_line_seperator(cols);
-        }
 
         generation++;
         sleep(1);
