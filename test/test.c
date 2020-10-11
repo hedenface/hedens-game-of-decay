@@ -107,6 +107,13 @@ START_TEST (decay_accurate)
     ck_assert_int_eq(next[1][1], 0);
     decay_grid(3, 3, grid, next, 9);
     ck_assert_int_eq(next[1][1], 8);
+
+    initialize_grid(3, 3, grid);
+    initialize_grid(3, 3, next);
+    grid[1][1] = -1;
+
+    decay_grid(3, 3, grid, next, 9);
+    ck_assert_int_eq(next[1][1], 0);
 }
 END_TEST
 
@@ -181,7 +188,8 @@ START_TEST (widest_map_entry_accurate)
 {
     ck_assert_int_eq(get_widest_map_entry(9,  "9=12,10=123"), 2);
     ck_assert_int_eq(get_widest_map_entry(10, "9=12,10=123"), 3);
-    ck_assert_int_eq(get_widest_map_entry(9, "0=1234,1=123,2=12"), 4);
+    ck_assert_int_eq(get_widest_map_entry(9, "0=1234,1=123,2=12,3="), 4);
+    ck_assert_int_eq(get_widest_map_entry(100, NULL), 3);
 }
 END_TEST
 
@@ -193,8 +201,15 @@ START_TEST (char_map_entry_accurate)
 
     str = get_char_map_entry(9, 10, map);
     ck_assert(str == NULL);
+    free(str);
+
     str = get_char_map_entry(10, 10, map);
     ck_assert_str_eq(str, "b");
+    free(str);
+
+    get_char_map_entry(9, 0, NULL);
+    ck_assert_str_eq(str, " ");
+    free(str);
 
     free(map);
 }
@@ -218,6 +233,8 @@ START_TEST (setup_char_map_accurate)
 
     free_char_map(6, char_map);
     free(map);
+
+    free_char_map(0, NULL);
 }
 END_TEST
 
@@ -262,30 +279,86 @@ Suite * decay_suite(void)
 }
 
 
+/* the rest of these tests are simply for coverage sake,
+   and so we can check this against valgrind afterwards to see if
+   we have any memory leaks */
+
+
+START_TEST (print_help_and_version)
+{
+    print_version();
+    print_help();
+}
+END_TEST
+
+
+START_TEST (seed_and_print)
+{
+    char * map = strdup("0=0");
+    char ** char_map = setup_char_map(9, map);
+    char * fmt = strdup("%s");
+    int grid[3][3] = { 0 };
+    seed_grid(3, 3, grid, 9);
+    print_grid(3, 3, grid, char_map, fmt);
+
+    print_line_seperator(9);
+
+    free_char_map(9, char_map);
+    free(map);
+    free(fmt);
+}
+END_TEST
+
+
+Suite * coverage_suite(void)
+{
+    Suite * suite = NULL;
+    TCase * tc    = NULL;
+
+    suite = suite_create("Coverage / Memcheck");
+
+    tc = tcase_create("");
+
+    tcase_add_test(tc, print_help_and_version);
+    tcase_add_test(tc, seed_and_print);
+
+    suite_add_tcase(suite, tc);
+
+    return suite;
+}
+
+
 int main(void)
 {
-    int number_failed = 0;
-    Suite * decay     = decay_suite();
-    SRunner * runner  = srunner_create(decay);
+    int number_failed   = 0;
+    int i               = 0;
+    Suite * decay       = decay_suite();
+    Suite * coverage    = coverage_suite();
+    SRunner * runner[2] = { NULL };
 
-    /* disable forking for runner */
-    srunner_set_fork_status(runner, CK_NOFORK);
+    runner[0] = srunner_create(decay);
+    runner[1] = srunner_create(coverage);
 
+    for (i = 0; i < 2; i++) {
 
-    /* available print_modes:
-        CK_SILENT
-        CK_MINIMAL
-        CK_NORMAL
-        CK_VERBOSE
-        CK_ENV (get print mode from ENV CK_VERBOSITY (silent, minimal, etc.))
-        CK_SUBUNIT
-    */
+        /* disable forking for runner */
+        srunner_set_fork_status(runner[i], CK_NOFORK);
 
-    srunner_run_all(runner, CK_VERBOSE);
+        /* available print_modes:
+            CK_SILENT
+            CK_MINIMAL
+            CK_NORMAL
+            CK_VERBOSE
+            CK_ENV (get print mode from ENV CK_VERBOSITY (silent, minimal, etc.))
+            CK_SUBUNIT
+        */
 
-    number_failed += srunner_ntests_failed(runner);
+        srunner_run_all(runner[i], CK_VERBOSE);
 
-    srunner_free(runner);
+        number_failed += srunner_ntests_failed(runner[i]);
+
+        srunner_free(runner[i]);
+    }
 
     printf("%s\n", "************************");
     printf("Total failures: %d\n", number_failed);
