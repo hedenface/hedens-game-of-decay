@@ -207,7 +207,7 @@ START_TEST (char_map_entry_accurate)
     ck_assert_str_eq(str, "b");
     free(str);
 
-    get_char_map_entry(9, 0, NULL);
+    str = get_char_map_entry(9, 0, NULL);
     ck_assert_str_eq(str, " ");
     free(str);
 
@@ -246,6 +246,7 @@ START_TEST (setup_cell_fmt_accurate)
 
     ck_assert_str_eq(fmt, "%9s ");
 
+    free(fmt);
     free(map);
 }
 END_TEST
