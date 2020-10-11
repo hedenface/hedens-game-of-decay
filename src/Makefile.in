@@ -8,5 +8,5 @@ CFLAGS=@CFLAGS@ -I$(INCLUDE_DIR)
 none: game-of-decay
 
 
-game-of-decay: game-of-decay.c
+game-of-decay: game-of-decay.c game-library.c
 	$(CC) $(CFLAGS) $^ -o $@

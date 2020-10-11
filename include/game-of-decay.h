@@ -33,7 +33,6 @@ char * get_char_map_entry(int max, int lookup, char * orig_map);
 char ** setup_char_map(int max, char * map);
 void free_char_map(int max, char ** char_map);
 char * setup_cell_fmt(int pad_left, int pad_right, int max, char * map);
-int main(int argc, char ** argv);
 
 
 #endif /* _GAME_OF_DECAY_H_ */
