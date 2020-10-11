@@ -27,6 +27,7 @@ The binary takes a few options:
 * `-v`, `--version`: Print version information and quit
 * `-r`, `--rows`: The amount of rows in the board (*minimum: `1`*)
 * `-c`, `--cols`: The amount of columns in the board (*minimum: `1`*)
+* `-f`, `--fullscreen`: Use as much of the terminal as possible
 * `-m`, `--max-value`: The maximum value of any cell (currently any value greater than 9 is going to cause formatting issues) (*default: `1`* [this mimics Conways Game of Life]) (*minimum: `1`*)
 * `-g`, `--generations`: The maximum amount of generations to print (*minimum: `1`*)
 * `-L`, `--left-pad`: The amount of padding to the left of each cells value

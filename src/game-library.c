@@ -44,6 +44,7 @@ void print_help()
     printf("%s\n", "                  minimum: 2");
     printf("%s\n", "-c,--cols         The amount of columns in the board");
     printf("%s\n", "                  minimum: 2");
+    printf("%s\n", "-f,--fullscreen   Use as much of the terminal as possible");
     printf("%s\n", "-m,--max-value    Maximum value of any given cell");
     printf("%s\n", "                  default: 1 (this reproduces Conways Game of Life)");
     printf("%s\n", "                  minimum: 1");
@@ -71,12 +72,14 @@ void parse_arguments(int argc, char ** argv,
     char c           = 0;
     int option_index = 0;
     int errors       = 0;
+    int fullscreen   = FALSE;
 
     static struct option long_options[] = {
         { "help",        no_argument,       0, 'h' },
         { "version",     no_argument,       0, 'v' },
         { "rows",        required_argument, 0, 'r' },
         { "cols",        required_argument, 0, 'c' },
+        { "fullscreen",  no_argument,       0, 'f' },
         { "generations", required_argument, 0, 'g' },
         { "left-pad",    required_argument, 0, 'L' },
         { "right-pad",   required_argument, 0, 'R' },
@@ -86,7 +89,7 @@ void parse_arguments(int argc, char ** argv,
 
     while (TRUE) {
 
-        c = getopt_long(argc, argv, "hvr:c:m:g:L:R:P:M:", long_options, &option_index);
+        c = getopt_long(argc, argv, "hvr:c:fm:g:L:R:P:M:", long_options, &option_index);
 
         if (c == -1) {
             break;
@@ -112,6 +115,10 @@ void parse_arguments(int argc, char ** argv,
             * cols = atoi(optarg);
             break;
 
+        case 'f':
+            fullscreen = TRUE;
+            break;
+
         case 'm':
             * max = atoi(optarg);
             break;
@@ -132,6 +139,20 @@ void parse_arguments(int argc, char ** argv,
             * map = strdup(optarg);
             break;
         }
+    }
+
+    if (fullscreen == TRUE) {
+        int term_rows = 0;
+        int term_cols = 0;
+
+        int total_cell_width = * pad_left + * pad_right;
+
+        get_term_size(&term_rows, &term_cols);
+
+        total_cell_width += get_widest_map_entry(* max, * map);
+
+        * cols = term_cols / total_cell_width;
+        * rows = term_rows;
     }
 
     if (* rows < 2) {
