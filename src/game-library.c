@@ -276,7 +276,7 @@ void decay_grid(int rows, int cols, int (* this)[cols], int (* next)[cols], int 
                        that allows 3(COME_ALIVE) decaying cells to bring a
                        dead one back to life, but hey... */
                     for (k = 1; k <= max; k++) {
-                        if (neighbors == (i * COME_ALIVE)) {
+                        if (neighbors == (k * COME_ALIVE)) {
                             next[i][j] = k;
                         }
                     }

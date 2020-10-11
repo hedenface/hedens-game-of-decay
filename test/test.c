@@ -94,7 +94,145 @@ START_TEST (neighbors_values_accurate)
 END_TEST
 
 
-#define a(t) tcase_add_test(tc, t)
+START_TEST (decay_accurate)
+{
+    int grid[3][3] = {
+        { 0, 0, 0 }, 
+        { 0, 9, 0 },
+        { 0, 0, 0 }
+    };
+
+    int next[3][3] = { 0 };
+
+    ck_assert_int_eq(next[1][1], 0);
+    decay_grid(3, 3, grid, next, 9);
+    ck_assert_int_eq(next[1][1], 8);
+}
+END_TEST
+
+
+START_TEST (come_alive_accurate)
+{
+    int grid[3][3] = {
+        { 9, 9, 9 }, 
+        { 0, 0, 0 },
+        { 0, 0, 0 }
+    };
+
+    int next[3][3] = { 0 };
+
+    ck_assert_int_eq(next[1][1], 0);
+    decay_grid(3, 3, grid, next, 9);
+    ck_assert_int_eq(next[1][1], 9);
+}
+END_TEST
+
+
+START_TEST (no_change_accurate)
+{
+    int perfect_neighbor_val = 9 * STAY_ALIVE_MIN / 3;
+    int grid[3][3] = {
+        { perfect_neighbor_val, perfect_neighbor_val, perfect_neighbor_val }, 
+        { 0, 9, 0 },
+        { 0, 0, 0 }
+    };
+
+    int next[3][3] = { 0 };
+
+    ck_assert_int_eq(next[1][1], 0);
+    decay_grid(3, 3, grid, next, 9);
+    ck_assert_int_eq(next[1][1], 9);
+}
+END_TEST
+
+
+START_TEST (next_grid_accurate)
+{
+    int this[3][3] = { 0 };
+
+    int next[3][3] = {
+        { 1, 2, 3 },
+        { 4, 5, 6 },
+        { 7, 8, 9 } 
+    };
+
+    ck_assert_int_eq(this[1][1], 0);
+    next_grid(3, 3, this, next);
+    ck_assert_int_eq(this[0][0], 1);
+    ck_assert_int_eq(this[1][1], 5);
+    ck_assert_int_eq(this[2][2], 9);
+}
+END_TEST
+
+
+START_TEST (printed_integer_len_accurate)
+{
+    ck_assert_int_eq(get_printed_integer_len(1), 1);
+    ck_assert_int_eq(get_printed_integer_len(10), 2);
+    ck_assert_int_eq(get_printed_integer_len(100), 3);
+    ck_assert_int_eq(get_printed_integer_len(1000), 4);
+    ck_assert_int_eq(get_printed_integer_len(10000), 5);
+    ck_assert_int_eq(get_printed_integer_len(100000), 6);
+}
+END_TEST
+
+
+START_TEST (widest_map_entry_accurate)
+{
+    ck_assert_int_eq(get_widest_map_entry(9,  "9=12,10=123"), 2);
+    ck_assert_int_eq(get_widest_map_entry(10, "9=12,10=123"), 3);
+    ck_assert_int_eq(get_widest_map_entry(9, "0=1234,1=123,2=12"), 4);
+}
+END_TEST
+
+
+START_TEST (char_map_entry_accurate)
+{
+    char * map = strdup("9=a,10=b");
+    char * str = NULL;
+
+    str = get_char_map_entry(9, 10, map);
+    ck_assert(str == NULL);
+    str = get_char_map_entry(10, 10, map);
+    ck_assert_str_eq(str, "b");
+
+    free(map);
+}
+END_TEST
+
+
+START_TEST (setup_char_map_accurate)
+{
+    char * map = strdup("0=a,1=b,2=c,3=d,4=e");
+    char ** char_map = NULL;
+
+    char_map = setup_char_map(6, map);
+
+    ck_assert_str_eq(char_map[0], "a");
+    ck_assert_str_eq(char_map[1], "b");
+    ck_assert_str_eq(char_map[2], "c");
+    ck_assert_str_eq(char_map[3], "d");
+    ck_assert_str_eq(char_map[4], "e");
+    ck_assert_str_eq(char_map[5], "5");
+    ck_assert_str_eq(char_map[6], "6");
+
+    free_char_map(6, char_map);
+    free(map);
+}
+END_TEST
+
+
+START_TEST (setup_cell_fmt_accurate)
+{
+    char * map = strdup("0=aaa");
+    char * fmt = setup_cell_fmt(6, 1, 1, map);
+
+    ck_assert_str_eq(fmt, "%9s ");
+
+    free(map);
+}
+END_TEST
+
 
 Suite * decay_suite(void)
 {
@@ -105,9 +243,18 @@ Suite * decay_suite(void)
 
     tc = tcase_create("");
 
-    a(booleans_are_sane);
-    a(grids_initialize);
-    a(neighbors_values_accurate);
+    tcase_add_test(tc, booleans_are_sane);
+    tcase_add_test(tc, grids_initialize);
+    tcase_add_test(tc, neighbors_values_accurate);
+    tcase_add_test(tc, decay_accurate);
+    tcase_add_test(tc, come_alive_accurate);
+    tcase_add_test(tc, no_change_accurate);
+    tcase_add_test(tc, next_grid_accurate);
+    tcase_add_test(tc, printed_integer_len_accurate);
+    tcase_add_test(tc, widest_map_entry_accurate);
+    tcase_add_test(tc, char_map_entry_accurate);
+    tcase_add_test(tc, setup_char_map_accurate);
+    tcase_add_test(tc, setup_cell_fmt_accurate);
 
     suite_add_tcase(suite, tc);
 
