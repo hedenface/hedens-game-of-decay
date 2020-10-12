@@ -35,6 +35,18 @@ The binary takes a few options:
 * `-M`, `--char-map`: The character map for values. (Key/values are separated by commas) (*default: `"0= ,1=1,2=2,3=3,...,X=X"`*)
     * ***hint***: Given a max-value of 10 (range of 0-10), you don't need to specify the entire range, simply `"10=A"` would allow for 0 to be `" "`, all of the other integers to be their values, and then substitute 10 with `"A"`.
 
+### Game of Life Example
+
+To run a very basic simulation of the Game of Life, use the simple options `-f -M 1=o`. The Map for `1=o` sets a nice visual for viewing live vs. dead cells. This assumes the max value is 1, which is the default - this simulates the original Game of Life.
+
+![Game of Life example animation](https://github.com/hedenface/hedens-game-of-decay/blob/main/assets/game-of-life.gif)
+
+### Game of Decay Example
+
+You can run a basic simulation of the Game of Decay by setting a few options, we'll use `-f -m 3 -M 1=o,2=O,3=@`. As per the Game of Life example, the `-f` chooses fullscreen mode, and the `-m 3` tells us our max value is 3 (range of 0-3), and then we map 1's to `o`, 2's to `O`, and 3's to `@`.
+
+![Game of Decay example animation](https://github.com/hedenface/hedens-game-of-decay/blob/main/assets/game-of-decay.gif)
+
 ## Original Rules (Conways Game of Life)
 
 An infinite, two-dimensional orthoganal grid of square cells, each of which is one of two possible states, **alive** or **dead**. Every cell interacts with its eight neighbors, which are the cells that are horizontally, vertically, or diagonally adjacent. At each step in time, the following transitions occur:
