@@ -2,7 +2,7 @@
 
 > Conways Game of Life... with a twist
 
-[![Build Status](https://travis-ci.org/hedenface/hedens-game-of-decay.svg?branch=master)](https://travis-ci.org/hedenface/hedens-game-of-decay)
+[![Build Status](https://travis-ci.org/hedenface/hedens-game-of-decay.svg?branch=main)](https://travis-ci.org/hedenface/hedens-game-of-decay)
 
 ## Rest In Peace John Horton Conway
 
